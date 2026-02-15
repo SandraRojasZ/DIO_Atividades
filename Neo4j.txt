@@ -1,7 +1,55 @@
-# Wait 60 seconds before connecting using these details, or login to https://console.neo4j.io to validate the Aura Instance is available
-NEO4J_URI=neo4j+s://512350ec.databases.neo4j.io
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=g4e_Me4Z3Z6QANJXdV6D6YNZsZBabtLaNgtfElwq8PQ
-NEO4J_DATABASE=neo4j
-AURA_INSTANCEID=512350ec
-AURA_INSTANCENAME=Free instance
+// --- 1. CRIAÇÃO DE CONSTRAINTS ---
+CREATE CONSTRAINT user_id_unique FOR (u:User) REQUIRE u.id IS UNIQUE;
+CREATE CONSTRAINT movie_id_unique FOR (m:Movie) REQUIRE m.id IS UNIQUE;
+CREATE CONSTRAINT series_id_unique FOR (s:Series) REQUIRE s.id IS UNIQUE;
+
+// --- 2. POPULANDO O BANCO ---
+
+// Criar Gêneros
+MERGE (g1:Genre {name: 'Sci-Fi'})
+MERGE (g2:Genre {name: 'Drama'})
+MERGE (g3:Genre {name: 'Action'})
+
+// Criar 10 Usuários
+UNWIND range(1, 10) AS id
+CREATE (:User {id: id, name: 'User ' + id});
+
+// Criar 10 Filmes/Séries (5 de cada)
+CREATE (m1:Movie {id: 101, title: 'Inception', year: 2010})
+CREATE (m2:Movie {id: 102, title: 'Interstellar', year: 2014})
+CREATE (m3:Movie {id: 103, title: 'The Matrix', year: 1999})
+CREATE (m4:Movie {id: 104, title: 'Parasite', year: 2019})
+CREATE (m5:Movie {id: 105, title: 'The Dark Knight', year: 2008})
+
+CREATE (s1:Series {id: 201, title: 'Stranger Things', seasons: 4})
+CREATE (s2:Series {id: 202, title: 'Breaking Bad', seasons: 5})
+CREATE (s3:Series {id: 203, title: 'Dark', seasons: 3})
+CREATE (s4:Series {id: 204, title: 'The Bear', seasons: 2})
+CREATE (s5:Series {id: 205, title: 'Succession', seasons: 4})
+
+// Criar Atores e Diretores
+CREATE (a1:Actor {name: 'Leonardo DiCaprio'})
+CREATE (a2:Actor {name: 'Keanu Reeves'})
+CREATE (d1:Director {name: 'Christopher Nolan'})
+CREATE (d2:Director {name: 'Bong Joon-ho'})
+
+// --- 3. CRIANDO RELACIONAMENTOS ---
+MATCH (m1:Movie {title: 'Inception'}), (g1:Genre {name: 'Sci-Fi'}) MERGE (m1)-[:IN_GENRE]->(g1)
+MATCH (m4:Movie {title: 'Parasite'}), (g2:Genre {name: 'Drama'}) MERGE (m4)-[:IN_GENRE]->(g2)
+MATCH (s3:Series {title: 'Dark'}), (g1:Genre {name: 'Sci-Fi'}) MERGE (s3)-[:IN_GENRE]->(g1)
+
+
+MATCH (d1:Director {name: 'Christopher Nolan'}), (m1:Movie {title: 'Inception'}) MERGE (d1)-[:DIRECTED]->(m1)
+MATCH (a1:Actor {name: 'Leonardo DiCaprio'}), (m1:Movie {title: 'Inception'}) MERGE (a1)-[:ACTED_IN]->(m1)
+
+// 10 visualizações
+MATCH (u:User {id: 1}), (m1:Movie {id: 101}) MERGE (u)-[:WATCHED {rating: 5.0}]->(m1)
+MATCH (u:User {id: 2}), (m2:Movie {id: 102}) MERGE (u)-[:WATCHED {rating: 4.5}]->(m2)
+MATCH (u:User {id: 3}), (s1:Series {id: 201}) MERGE (u)-[:WATCHED {rating: 4.0}]->(s1)
+MATCH (u:User {id: 4}), (s2:Series {id: 202}) MERGE (u)-[:WATCHED {rating: 5.0}]->(s2)
+MATCH (u:User {id: 5}), (m3:Movie {id: 103}) MERGE (u)-[:WATCHED {rating: 3.5}]->(m3)
+MATCH (u:User {id: 6}), (s3:Series {id: 203}) MERGE (u)-[:WATCHED {rating: 4.8}]->(s3)
+MATCH (u:User {id: 7}), (m4:Movie {id: 104}) MERGE (u)-[:WATCHED {rating: 5.0}]->(m4)
+MATCH (u:User {id: 8}), (s4:Series {id: 204}) MERGE (u)-[:WATCHED {rating: 4.2}]->(s4)
+MATCH (u:User {id: 9}), (m5:Movie {id: 105}) MERGE (u)-[:WATCHED {rating: 4.9}]->(m5)
+MATCH (u:User {id: 10}), (s5:Series {id: 205}) MERGE (u)-[:WATCHED {rating: 4.7}]->(s5)
